@@ -3,12 +3,15 @@ class PostsController < ApplicationController
     render json: { error: e.message }, status: :internal_error
   end
 
-  rescue_from ActiveRecord::RecordInvalid do |e|
+   rescue_from ActiveRecord::RecordInvalid do |e|
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def index
     @posts = Post.where(published: true)
+    if !params[:search].nil? && params[:search].nil?
+      @posts =PostSearchService.search(@posts, params[:search])
+    end
     render json: @posts, status: :ok
   end
 
