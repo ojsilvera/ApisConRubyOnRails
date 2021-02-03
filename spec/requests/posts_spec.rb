@@ -15,7 +15,7 @@ RSpec.describe 'Posts', type: :request do
     let!(:posts) { create_list(:post, 10, published: true) }
     before {get '/posts'}
     it 'return all posts' do
-      #byebug
+      # byebug
       payload = JSON.parse(response.body)
       expect(payload.size).to eq(posts.size)
       expect(response).to have_http_status(200)
@@ -41,19 +41,18 @@ RSpec.describe 'Posts', type: :request do
       req_payload = {
         post: {
           title: 'title',
-          contend: 'contend',
-          publised: false,
-          user: user.id
-
+          content: 'contend',
+          published: false,
+          user_id: user.id
         }
       }
 
-      #POST HTTP
+      # POST HTTP
       post '/posts', params: req_payload
       payload = JSON.parse(response.body)
       expect(payload).to_not be_empty
-      expect(payload['id']).to_not be_empty
-      expect(response).to have_http_status(:create)
+      expect(payload['id']).to_not be_nil
+      expect(response).to have_http_status(:created)
     end
 
     it '-> should return error message on invalid post' do
@@ -67,12 +66,12 @@ RSpec.describe 'Posts', type: :request do
         }
       }
 
-      #POST HTTP
+      # POST HTTP
       post '/posts', params: req_payload
       payload = JSON.parse(response.body)
       expect(payload).to_not be_empty
       expect(payload['error']).to_not be_empty
-      expect(response).to have_http_status(:unprocesable_entity)
+      expect(response).to have_http_status(:unprocessable_entity)
     end
   end
 
@@ -83,13 +82,13 @@ RSpec.describe 'Posts', type: :request do
       req_payload = {
         post: {
           title: 'title',
-          contend: 'contend',
-          publised: true,
+          content: 'contend',
+          published: true
         }
       }
 
       # POST HTTP
-      post "/posts/#{article.id}", params: req_payload
+      put "/posts/#{article.id}", params: req_payload
       payload = JSON.parse(response.body)
       expect(payload).to_not be_empty
       expect(payload['id']).to eq(article.id)
@@ -107,11 +106,11 @@ RSpec.describe 'Posts', type: :request do
       }
 
       # POST HTTP
-      post "/posts/#{article.id}", params: req_payload
+      put "/posts/#{article.id}", params: req_payload
       payload = JSON.parse(response.body)
       expect(payload).to_not be_empty
       expect(payload['error']).to_not be_empty
-      expect(response).to have_http_status(:unprocesable_entity)
+      expect(response).to have_http_status(:unprocessable_entity)
     end
   end
 
