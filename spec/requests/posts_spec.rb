@@ -1,8 +1,9 @@
 require 'rails_helper'
+require 'byebug'
 
 RSpec.describe 'Posts', type: :request do
   describe 'GET /post' do
-    before {get '/post'}
+    before {get '/posts'}
     it 'should return OK' do
       payload = JSON.parse(response.body)
       expect(payload).to be_empty
@@ -10,25 +11,108 @@ RSpec.describe 'Posts', type: :request do
     end
   end
 
-  describe "with data in the DB" do
-    before {get '/post'}
-    let(:posts) { create_list(:post, 10, published: true) }
+  describe '-> with data in the DB' do
+    let!(:posts) { create_list(:post, 10, published: true) }
+    before {get '/posts'}
     it 'return all posts' do
+      #byebug
       payload = JSON.parse(response.body)
       expect(payload.size).to eq(posts.size)
       expect(response).to have_http_status(200)
     end
   end
 
-  describe 'GET /post/{id}' do
+  describe '-> GET /posts/{id}' do
     let(:post) { create(:post) }
 
     it 'return a post' do
-      get "/post/#{post.id}"
+      get "/posts/#{post.id}"
       payload = JSON.parse(response.body)
       expect(payload).to_not be_empty
-      expect(payload["id"]).to eq(post.id)
+      expect(payload['id']).to eq(post.id)
       expect(response).to have_http_status(200)
     end
   end
+
+  describe '-> POST /posts' do
+    let!(:user) { create(:user) }
+
+    it '-> should create a post' do
+      req_payload = {
+        post: {
+          title: 'title',
+          contend: 'contend',
+          publised: false,
+          user: user.id
+
+        }
+      }
+
+      #POST HTTP
+      post '/posts', params: req_payload
+      payload = JSON.parse(response.body)
+      expect(payload).to_not be_empty
+      expect(payload['id']).to_not be_empty
+      expect(response).to have_http_status(:create)
+    end
+
+    it '-> should return error message on invalid post' do
+      req_payload = {
+        post: {
+          title: 'title',
+          contend: 'contend',
+          publised: false,
+          user: user.id
+
+        }
+      }
+
+      #POST HTTP
+      post '/posts', params: req_payload
+      payload = JSON.parse(response.body)
+      expect(payload).to_not be_empty
+      expect(payload['error']).to_not be_empty
+      expect(response).to have_http_status(:unprocesable_entity)
+    end
+  end
+
+  describe '-> PUT /posts/{id}' do
+    let!(:article) { create(:post) }
+
+    it '-> should create a post' do
+      req_payload = {
+        post: {
+          title: 'title',
+          contend: 'contend',
+          publised: true,
+        }
+      }
+
+      # POST HTTP
+      post "/posts/#{article.id}", params: req_payload
+      payload = JSON.parse(response.body)
+      expect(payload).to_not be_empty
+      expect(payload['id']).to eq(article.id)
+      expect(response).to have_http_status(:ok)
+    end
+
+
+    it '-> should return error message on invalid post' do
+      req_payload = {
+        post: {
+          title: nil,
+          contend: nil,
+          publised: false
+        }
+      }
+
+      # POST HTTP
+      post "/posts/#{article.id}", params: req_payload
+      payload = JSON.parse(response.body)
+      expect(payload).to_not be_empty
+      expect(payload['error']).to_not be_empty
+      expect(response).to have_http_status(:unprocesable_entity)
+    end
+  end
+
 end
